@@ -1,6 +1,10 @@
+const getHtmlContent= require("./middleware/getHtmlContent");
+
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+
+require('dotenv').config();
 
 const base_url =
   "https://mydomain.myshopify.com/admin/customers.json?limit=250";
@@ -39,19 +43,8 @@ function sendRequest(url) {
 }
 
 function start() {
-  const results = [];
-  const pageCount = 11;
-  for (let i = 1; i <= pageCount; i++) {
-    const filter = `page=${i}`;
-    const url = addFiltersToUrl(base_url, [filter]);
-    const filename = `file-${i}`;
-    sendRequest(url)
-      .then(json => {
-        console.log("Result obtained!", json);
-        saveResultInFile({ json, filename });
-      })
-      .catch(error => console.error("error!!!", error));
-  }
+  getHtmlContent();
+  // loadHTML();
 }
 
 async function saveResultInFile({ json, filename }) {
