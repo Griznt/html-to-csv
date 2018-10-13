@@ -1,55 +1,39 @@
 const getHtmlContent= require("./middleware/getHtmlContent");
 
+const Json2csvParser = require('json2csv').Parser;
+
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
 require('dotenv').config();
 
-const base_url =
-  "https://mydomain.myshopify.com/admin/customers.json?limit=250";
-
 const dirName = "output";
 if (!fs.existsSync(dirName)) fs.mkdirSync(dirName);
 
 start();
 
-function addFiltersToUrl(url, filters) {
-  let newUrl = url;
-  filters.forEach((filter, i) => {
-    if (i === 0 && !url.includes("?")) newUrl += `?${filter}`;
-    else newUrl += `&${filter}`;
-  });
-  return newUrl;
-}
-
-function sendRequest(url) {
-  return new Promise((resolve, reject) =>
-    axios
-      .get(url)
-      .then(response => {
-        if (response.data) return resolve(response.data);
-        else reject("no JSON data returned");
-      })
-      .catch(error => {
-        try {
-          if (error.response.data) return resolve(error.response.data);
-          else reject("no JSON data returned");
-        } catch (error) {
-          console.log("MEGA ERROR", error);
-        }
-      })
-  );
-}
-
 function start() {
-  getHtmlContent();
-  // loadHTML();
+  getHtmlContent()
+  .then(res => saveResultInFile({json: res, filename: 'outputfile'}))
+  .catch(error => console.error(`HTML content loading error: ${error.toString()}`));
 }
 
 async function saveResultInFile({ json, filename }) {
-  const filePath = path.join(dirName, `${filename}.txt`);
-  const writeStream = fs.createWriteStream(filePath);
-  writeStream.write(JSON.stringify(json));
-  writeStream.end();
+  
+  try {
+    const parser = new Json2csvParser( { 
+      fields: [
+        process.env.FIRST_COLUMN || "first", 
+        process.env.SECOND_COLUMN || "second"
+      ]});
+    const csv = parser.parse(json);
+                                           
+    const filePath = path.join(dirName, `${filename}.csv`);
+    const writeStream = fs.createWriteStream(filePath);
+    writeStream.write(csv);
+    writeStream.end();
+  } catch (err) {
+    console.error(`File saving error: ${err.toString()}`);
+  }
 }
