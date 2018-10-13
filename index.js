@@ -21,15 +21,17 @@ function start() {
 
 async function saveResultInFile({ json, filename }) {
   
+const firstColumnHeader = process.env.FIRST_COLUMN || 'first',
+secondColumnHeader = process.env.SECOND_COLUMN || 'second';
   try {
     const parser = new Json2csvParser( { 
       fields: [
-        process.env.FIRST_COLUMN || "first", 
-        process.env.SECOND_COLUMN || "second"
+        firstColumnHeader, 
+        secondColumnHeader
       ]});
     const csv = parser.parse(json);
                                            
-    const filePath = path.join(dirName, `${filename}.csv`);
+    const filePath = path.join(dirName, `${firstColumnHeader}-${secondColumnHeader}.csv`);
     const writeStream = fs.createWriteStream(filePath);
     writeStream.write(csv);
     writeStream.end();
